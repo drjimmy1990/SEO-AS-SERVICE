@@ -35,3 +35,7 @@ export const startPageAnalysis = (page_id) => {
 export const getPagesByProjectId = (projectId) => {
     return apiClient.get(`/projects/${projectId}/pages`);
 };
+
+export const getAiSuggestions = (report_id) => {
+    return apiClient.post('/ai/suggestions', { report_id });
+};

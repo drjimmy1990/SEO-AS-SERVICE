@@ -5,6 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import projectRoutes from './api/routes/projectRoutes';
 import analysisRoutes from './api/routes/analysisRoutes'; // <-- ADD THIS IMPORT
+import aiRoutes from './api/routes/aiRoutes';
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.use(express.json()); // Enable parsing of JSON request bodies
 // All routes defined in projectRoutes will be prefixed with '/api/projects'
 app.use('/api/projects', projectRoutes);
 app.use('/api/analysis', analysisRoutes); // <-- ADD THIS LINE
+app.use('/api/ai', aiRoutes);
 
 // --- Server Listener ---
 app.listen(port, () => {

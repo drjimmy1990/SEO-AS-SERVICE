@@ -76,7 +76,7 @@ const ProjectPage = () => {
                             </div>
                         )}
                         {selectedPage.latest_report && (
-                            <AnalysisReport reportData={selectedPage.latest_report.report_data} />
+                            <AnalysisReport report={selectedPage.latest_report} />
                         )}
                     </div>
                 ) : (
