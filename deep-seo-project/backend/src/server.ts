@@ -3,7 +3,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import projectRoutes from './api/routes/projectRoutes'; // <-- Import our new routes
+import projectRoutes from './api/routes/projectRoutes';
+import analysisRoutes from './api/routes/analysisRoutes'; // <-- ADD THIS IMPORT
 
 dotenv.config();
 
@@ -17,9 +18,11 @@ app.use(express.json()); // Enable parsing of JSON request bodies
 // --- API Routes ---
 // All routes defined in projectRoutes will be prefixed with '/api/projects'
 app.use('/api/projects', projectRoutes);
+app.use('/api/analysis', analysisRoutes); // <-- ADD THIS LINE
 
 // --- Server Listener ---
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
     console.log(`Crawl endpoint is available at POST http://localhost:${port}/api/projects/crawl`);
+    console.log(`Analysis endpoint is available at POST http://localhost:${port}/api/analysis/run`);
 });
