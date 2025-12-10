@@ -30,3 +30,8 @@ export const startNewCrawl = (homepage_url) => {
 export const startPageAnalysis = (page_id) => {
     return apiClient.post('/analysis/run', { page_id });
 };
+
+// Add this function to api.js
+export const getPagesByProjectId = (projectId) => {
+    return apiClient.get(`/projects/${projectId}/pages`);
+};

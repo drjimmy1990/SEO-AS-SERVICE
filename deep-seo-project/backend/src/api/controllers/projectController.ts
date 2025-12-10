@@ -67,5 +67,38 @@ export const startCrawlController = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error('Error in crawl controller:', error);
         res.status(500).json({ error: 'An internal server error occurred.', details: error.message });
+
     }
+};
+
+export const getProjectPagesController = async (req: Request, res: Response) => {
+    const { projectId } = req.params;
+
+    const { data, error } = await supabase
+        .from('pages')
+        .select(`
+            id,
+            url,
+            last_analyzed_at,
+            analysis_reports ( id, created_at, report_data )
+        `)
+        .eq('project_id', projectId)
+        .order('created_at', { foreignTable: 'analysis_reports', ascending: false });
+
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+
+    // We only want the LATEST report for each page
+    const pagesWithLatestReport = data.map(page => {
+        const latestReport = page.analysis_reports.length > 0 ? page.analysis_reports[0] : null;
+        return {
+            id: page.id,
+            url: page.url,
+            last_analyzed_at: page.last_analyzed_at,
+            latest_report: latestReport // Nest the latest report directly
+        };
+    });
+
+    res.status(200).json(pagesWithLatestReport);
 };
