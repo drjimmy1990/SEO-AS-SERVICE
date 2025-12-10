@@ -1,31 +1,28 @@
-// frontend/src/components/AnalysisReport.jsx
 import React, { useState } from 'react';
 import { getAiSuggestions } from '../services/api';
 
 const ReportItem = ({ status, title, children }) => {
-    const statusColors = { good: '#28a745', warn: '#ffc107', bad: '#dc3545', info: '#17a2b8' };
-    const statusIcons = { good: '✓', warn: '!', bad: '✗', info: 'i' };
-
+    const statusColors = { good: '#28a745', warn: '#ffc107', bad: '#dc3545' };
+    const statusIcons = { good: '✓', warn: '!', bad: '✗' };
     return (
-        <div style={{ border: '1px solid #ddd', borderRadius: '5px', marginBottom: '1rem', padding: '1rem', backgroundColor: '#fff' }}>
-            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', color: '#333' }}>
-                <span style={{ color: statusColors[status], marginRight: '10px', fontSize: '24px', fontWeight: 'bold' }}>{statusIcons[status]}</span>
+        <div style={{ border: '1px solid #ddd', borderRadius: '5px', marginBottom: '1rem', padding: '1rem' }}>
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center' }}>
+                <span style={{ color: statusColors[status], marginRight: '10px', fontSize: '24px' }}>{statusIcons[status]}</span>
                 {title}
             </h3>
-            <div style={{ marginLeft: '34px', paddingTop: '10px', color: '#555' }}>
-                {children}
-            </div>
+            <div style={{ marginLeft: '34px', paddingTop: '5px', color: '#555' }}>{children}</div>
         </div>
     );
 };
 
-const SuggestionButton = ({ onClick, isLoading, children }) => (
-    <button onClick={onClick} disabled={isLoading} style={{ marginLeft: '10px', fontSize: '12px', cursor: 'pointer' }}>
-        {isLoading ? 'Thinking...' : children}
-    </button>
+const SuggestionBox = ({ title, children }) => (
+    <div style={{ border: '1px solid #007bff', backgroundColor: '#f0f8ff', borderRadius: '5px', padding: '10px', marginTop: '10px' }}>
+        <strong style={{ color: '#0056b3' }}>✨ AI Suggestion: {title}</strong>
+        <div style={{ marginTop: '5px' }}>{children}</div>
+    </div>
 );
 
-const AnalysisReport = ({ report }) => { // Renamed prop to 'report' for clarity
+const AnalysisReport = ({ report }) => {
     if (!report) return null;
 
     const [suggestions, setSuggestions] = useState(null);
@@ -34,7 +31,7 @@ const AnalysisReport = ({ report }) => { // Renamed prop to 'report' for clarity
     const handleGetSuggestions = async () => {
         setIsLoading(true);
         try {
-            const response = await getAiSuggestions(report.id); // We need the report ID
+            const response = await getAiSuggestions(report.id);
             setSuggestions(response.data);
         } catch (err) {
             alert('Failed to get AI suggestions.');
@@ -44,102 +41,72 @@ const AnalysisReport = ({ report }) => { // Renamed prop to 'report' for clarity
         }
     };
 
-    const { report_data: reportData } = report; // The data is nested in the report object
+    const { report_data: reportData } = report;
     const { title, description, h1_count } = reportData.currentSeo;
     const { headings, images, word_count } = reportData.contentAnalysis;
-    const recommendations = reportData.recommendations || [];
-    const score = reportData.seoScore || 0;
 
-    let scoreColor = '#dc3545';
-    if (score >= 80) scoreColor = '#28a745';
-    else if (score >= 50) scoreColor = '#ffc107';
-
-    // ... (All the status logic remains the same) ...
     const titleStatus = title.length >= 10 && title.length <= 60 ? 'good' : 'warn';
     const descStatus = description.length >= 50 && description.length <= 160 ? 'good' : 'warn';
     const h1Status = h1_count === 1 ? 'good' : 'bad';
-    const altTextStatus = images.every(img => img.alt) ? 'good' : 'warn';
+    const altTextStatus = images.every(img => img.alt && img.alt.length > 5) ? 'good' : 'warn';
 
     return (
         <div>
-            {/* --- HEADER & SCORE --- */}
-            <div style={{ marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid #eee' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 style={{ marginTop: 0, color: '#333' }}>SEO Score</h2>
-                    <SuggestionButton onClick={handleGetSuggestions} isLoading={isLoading}>
-                        ✨ Get AI Suggestions
-                    </SuggestionButton>
-                </div>
-                <div style={{ fontSize: '48px', fontWeight: 'bold', color: scoreColor }}>
-                    {score} / 100
-                </div>
-                <p>Analyzed URL: <a href={reportData.url} target="_blank" rel="noopener noreferrer">{reportData.url}</a></p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
+                <h2>Report for: <a href={reportData.url} target="_blank">{reportData.url}</a></h2>
+                <button onClick={handleGetSuggestions} disabled={isLoading} style={{ padding: '8px 12px', cursor: 'pointer' }}>
+                    {isLoading ? '🤖 Thinking...' : '✨ Get AI Recommendations'}
+                </button>
             </div>
 
-            {/* --- RECOMMENDATIONS SECTION --- */}
-            {recommendations.length > 0 && (
-                <div style={{ marginBottom: '2rem', backgroundColor: '#fff3cd', padding: '1.5rem', borderRadius: '8px', border: '1px solid #ffeeba' }}>
-                    <h3 style={{ marginTop: 0, color: '#856404' }}>🚀 Actionable Recommendations</h3>
-                    <ul style={{ paddingLeft: '20px', color: '#856404' }}>
-                        {recommendations.map((rec, index) => (
-                            <li key={index} style={{ marginBottom: '0.5rem' }}>{rec}</li>
-                        ))}
+            <div style={{ marginTop: '1.5rem' }}>
+                <ReportItem status={titleStatus} title="Title Tag">
+                    <p><strong>Current:</strong> "{title}"</p>
+                    {suggestions?.title_suggestions && (
+                        <SuggestionBox title="New Titles">
+                            <ul>{suggestions.title_suggestions.map((s, i) => <li key={i}>{s}</li>)}</ul>
+                        </SuggestionBox>
+                    )}
+                </ReportItem>
+
+                <ReportItem status={descStatus} title="Meta Description">
+                    <p><strong>Current:</strong> "{description || 'Not Found'}"</p>
+                    {suggestions?.description_suggestions && (
+                        <SuggestionBox title="New Descriptions">
+                            <ul>{suggestions.description_suggestions.map((s, i) => <li key={i}>{s}</li>)}</ul>
+                        </SuggestionBox>
+                    )}
+                </ReportItem>
+
+                <ReportItem status={h1Status} title="H1 Heading">
+                    <p>Found {h1_count} &lt;h1&gt; tag(s). (Recommended: 1)</p>
+                    {headings.filter(h => h.tag === 'h1').map((h, i) => <p key={i}>- "{h.text}"</p>)}
+                    {suggestions?.h1_recommendations && (
+                        <SuggestionBox title="How to Fix">
+                            <p>{suggestions.h1_recommendations}</p>
+                        </SuggestionBox>
+                    )}
+                </ReportItem>
+
+                <ReportItem status={altTextStatus} title="Image Alt Texts">
+                    <ul>
+                        {images.map(img => {
+                            const recommendation = suggestions?.image_alt_recommendations?.find(rec => rec.selector === img.selector);
+                            return (
+                                <li key={img.selector} style={{ marginBottom: '10px' }}>
+                                    <img src={img.src} alt="thumbnail" width="50" style={{ verticalAlign: 'middle', marginRight: '10px', border: '1px solid #ccc' }} />
+                                    <strong>Current Alt:</strong> <span style={{ color: !img.alt || img.alt.length < 5 ? 'red' : 'inherit' }}>"{img.alt || 'MISSING!'}"</span>
+                                    {recommendation && (
+                                        <SuggestionBox title="New Alt Text">
+                                            <p>"{recommendation.suggested_alt}"</p>
+                                        </SuggestionBox>
+                                    )}
+                                </li>
+                            )
+                        })}
                     </ul>
-                </div>
-            )}
-
-            {/* --- META TAGS --- */}
-            <ReportItem status={titleStatus} title="Title Tag">
-                <p><strong>Current:</strong> "{title}"</p>
-                <p>Length: {title.length} chars</p>
-                {suggestions?.titles && (
-                    <div style={{ marginTop: '10px', backgroundColor: '#e3f2fd', padding: '10px', borderRadius: '5px' }}>
-                        <strong>💡 AI Suggestions:</strong>
-                        <ul style={{ marginTop: '5px' }}>
-                            {suggestions.titles.map((s, i) => <li key={i} style={{ marginBottom: '5px' }}>"{s}"</li>)}
-                        </ul>
-                    </div>
-                )}
-            </ReportItem>
-
-            <ReportItem status={descStatus} title="Meta Description">
-                <p><strong>Current:</strong> "{description || 'Not Found'}"</p>
-                <p>Length: {description.length} chars</p>
-                {suggestions?.descriptions && (
-                    <div style={{ marginTop: '10px', backgroundColor: '#e3f2fd', padding: '10px', borderRadius: '5px' }}>
-                        <strong>💡 AI Suggestions:</strong>
-                        <ul style={{ marginTop: '5px' }}>
-                            {suggestions.descriptions.map((s, i) => <li key={i} style={{ marginBottom: '5px' }}>"{s}"</li>)}
-                        </ul>
-                    </div>
-                )}
-            </ReportItem>
-
-            {/* --- CONTENT STRUCTURE --- */}
-            <ReportItem status={h1Status} title="H1 Heading">
-                <p>Found {h1_count} &lt;h1&gt; tag(s).</p>
-                {headings.filter(h => h.tag === 'h1').map((h, i) => <p key={i} style={{ fontStyle: 'italic' }}>- "{h.text}"</p>)}
-            </ReportItem>
-
-            {/* --- IMAGE SEO --- */}
-            <ReportItem status={altTextStatus} title="Image Alt Texts">
-                <ul>
-                    {images.map(img => {
-                        const suggestion = suggestions?.alt_texts?.find(s => s.selector === img.selector)?.suggestion;
-                        return (
-                            <li key={img.selector} style={{ color: img.alt ? 'inherit' : 'red', marginBottom: '10px' }}>
-                                <img src={img.src} alt="thumbnail" width="50" style={{ verticalAlign: 'middle', marginRight: '10px' }} />
-                                <strong>Current Alt:</strong> "{img.alt || 'MISSING!'}"
-                                {suggestion && (
-                                    <div style={{ color: '#0056b3', marginLeft: '60px', marginTop: '5px' }}>
-                                        <strong>💡 Suggestion:</strong> "{suggestion}"
-                                    </div>
-                                )}
-                            </li>
-                        )
-                    })}
-                </ul>
-            </ReportItem>
+                </ReportItem>
+            </div>
         </div>
     );
 };

@@ -26,19 +26,10 @@ export const getAiSuggestionsController = async (req: Request, res: Response) =>
             return res.status(404).json({ error: `Analysis report with ID ${report_id} not found.` });
         }
 
-        const reportData = report.report_data as any; // Cast to any to access dynamic properties
-        const fullText = reportData.contentAnalysis.full_text_content;
-        const imagesForAi = reportData.contentAnalysis.images.map((img: any) => ({
-            selector: img.selector,
-            src: img.src,
-            current_alt: img.alt
-        }));
-
-        // 2. Call the n8n webhook with the required data
-        console.log('Sending data to n8n for AI suggestions...');
+        // 2. Call the n8n webhook with the ENTIRE report_data object
+        console.log('Sending full analysis report to n8n for AI suggestions...');
         const aiResponse = await axios.post(n8nWebhookUrl, {
-            full_text_content: fullText,
-            images_for_ai: imagesForAi
+            report_data: report.report_data
         });
 
         // 3. Return the AI's response directly to the frontend
