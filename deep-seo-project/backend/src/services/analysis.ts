@@ -3,15 +3,34 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
-// Helper to generate a simple selector for Cheerio elements
-const getSelector = (el: any): string => {
-    if (!el || !el.tagName) return '';
-    let selector = el.tagName;
+// A slightly smarter selector generator
+const getSelector = (el: any, $: any): string => {
     if (el.attribs && el.attribs.id) {
-        selector += `#${el.attribs.id}`;
-    } else if (el.attribs && el.attribs.class) {
+        // If an element has an ID, that's the best and most unique selector
+        return `#${el.attribs.id}`;
+    }
+
+    // Fallback to a less specific but still useful selector
+    let selector = el.tagName;
+    if (el.attribs && el.attribs.class) {
         selector += `.${el.attribs.class.split(/\s+/).join('.')}`;
     }
+    // To make it more unique, we can find its index among its siblings
+    // Note: cheerio .siblings() returns all siblings, not just previous ones.
+    // A better approach for uniqueness without ID might be needed for complex pages,
+    // but this is a reasonable start. 
+    // Using index of element in its parent 's children might be safer if structure is consistent.
+
+    // Simplified nth-of-type logic for now as cheerio types can be tricky
+    try {
+        const parent = $(el).parent();
+        const siblings = parent.children(selector);
+        if (siblings.length > 1) {
+            const index = siblings.index(el);
+            return `${selector}:nth-of-type(${index + 1})`;
+        }
+    } catch (e) { }
+
     return selector;
 };
 
@@ -96,7 +115,7 @@ export const analyzePage = async (url: string) => {
     const images: { selector: string, src: string | undefined, alt: string }[] = [];
     $('img').each((i, el) => {
         try {
-            const selector = getSelector(el);
+            const selector = getSelector(el, $); // Pass cheerio instance
             images.push({
                 selector: selector,
                 src: $(el).attr('src'),

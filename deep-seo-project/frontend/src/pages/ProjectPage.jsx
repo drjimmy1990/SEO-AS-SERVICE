@@ -76,7 +76,11 @@ const ProjectPage = () => {
                             </div>
                         )}
                         {selectedPage.latest_report && (
-                            <AnalysisReport report={selectedPage.latest_report} />
+                            <AnalysisReport
+                                report={selectedPage.latest_report}
+                                pageId={selectedPage.id}
+                                onSave={fetchPages}
+                            />
                         )}
                     </div>
                 ) : (

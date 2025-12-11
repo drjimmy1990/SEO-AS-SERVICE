@@ -39,3 +39,7 @@ export const getPagesByProjectId = (projectId) => {
 export const getAiSuggestions = (report_id) => {
     return apiClient.post('/ai/suggestions', { report_id });
 };
+
+export const saveLiveSettings = (page_id, settings_data) => {
+    return apiClient.post('/settings/save', { page_id, settings_data });
+};
