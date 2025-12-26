@@ -1,12 +1,11 @@
 // backend/public/injector.js
 (() => {
-    const API_URL = 'https://84dwfbd8-3001.euw.devtunnels.ms/api/settings/live';
+    const API_URL = 'http://localhost:3001/api/settings/live';
 
     // CRITICAL FIX: Clean the URL to match how it's stored in the database.
     // 1. Get the full href.
     // 2. Remove any #hash part.
     // 3. Remove any trailing slash (if it exists).
-    //   revise seoability......cases..
     const currentUrl = window.location.href.split('#')[0].replace(/\/$/, '');
 
     console.log(`[DeepSEO Injector] Fetching settings for cleaned URL: ${currentUrl}`);
