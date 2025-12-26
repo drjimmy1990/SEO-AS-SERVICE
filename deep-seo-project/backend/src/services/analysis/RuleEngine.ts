@@ -8,7 +8,7 @@ export class RuleEngine {
         this.rules.push(rule);
     }
 
-    public async analyze(crawlResult: CrawlResult, targetUrl: string): Promise<AnalysisResult> {
+    public async analyze(crawlResult: CrawlResult, targetUrl: string, extraRules: SEORule[] = []): Promise<AnalysisResult> {
         const results: RuleResult[] = [];
         const mainPage = crawlResult.pages.get(targetUrl);
 
@@ -31,7 +31,9 @@ export class RuleEngine {
         // We will run all rules against the MAIN page for now to verify logic, 
         // but the engine structure supports iterating all.
 
-        for (const rule of this.rules) {
+        const allRules = [...this.rules, ...extraRules];
+
+        for (const rule of allRules) {
             try {
                 const result = await rule.evaluate(mainPage, crawlResult.pages);
                 results.push(result);

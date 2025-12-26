@@ -121,8 +121,14 @@ export class CrawlerService {
             // Request interception to handle some errors gracefully or log them
             await page.setRequestInterception(false); // keep false for now, maybe enable for resource filtering later
 
+            // Bypass LocalTunnel reminder page
+            await page.setExtraHTTPHeaders({
+                'Bypass-Tunnel-Reminder': 'true',
+                'User-Agent': 'DeepSEO-Crawler/1.0'
+            });
+
             const response = await page.goto(url, {
-                waitUntil: 'networkidle2',
+                waitUntil: 'networkidle0',
                 timeout: this.options.timeout
             });
 

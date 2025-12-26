@@ -1,6 +1,6 @@
 // backend/public/injector.js
 (() => {
-    const API_URL = 'https://84dwfbd8-3001.euw.devtunnels.ms/api/settings/live';
+    const API_URL = 'https://bumpy-ways-pick.loca.lt/api/settings/live';
 
     // CRITICAL FIX: Clean the URL to match how it's stored in the database.
     // 1. Get the full href.
@@ -11,7 +11,11 @@
 
     console.log(`[DeepSEO Injector] Fetching settings for cleaned URL: ${currentUrl}`);
 
-    fetch(`${API_URL}?url=${encodeURIComponent(currentUrl)}`)
+    fetch(`${API_URL}?url=${encodeURIComponent(currentUrl)}`, {
+        headers: {
+            'Bypass-Tunnel-Reminder': 'true'
+        }
+    })
         .then(response => {
             if (!response.ok || response.status === 404) {
                 console.log('[DeepSEO Injector] No live settings found for this URL.');

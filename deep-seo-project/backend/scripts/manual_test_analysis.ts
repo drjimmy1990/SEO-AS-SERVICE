@@ -14,6 +14,26 @@ const runTest = async () => {
     } catch (error: any) {
         console.error('API Test Failed:', error.response?.data || error.message);
     }
+
+    console.log('\n--- Testing Script Detection ---');
+    try {
+        // Test with a tracking code that SHOULD be found on our local server
+        const localTarget = 'https://neat-lemons-send.loca.lt';
+        const trackingCode = 'injector.js';
+
+        console.log(`Analyzing ${localTarget} for code ${trackingCode}...`);
+
+        const response = await axios.post(url, {
+            url: localTarget,
+            trackingCode: trackingCode
+        });
+        const scriptRule = response.data.results.find((r: any) => r.ruleId === 'technical-script-tag');
+        console.log('Script Rule Status:', scriptRule?.status);
+        console.log('Script Rule Issues:', scriptRule?.issues);
+
+    } catch (error: any) {
+        console.error('API Test Failed:', error.response?.data || error.message);
+    }
 };
 
 runTest();

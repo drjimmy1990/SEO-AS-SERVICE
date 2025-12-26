@@ -6,14 +6,14 @@ const analysisService = new AnalysisService();
 
 router.post('/run', async (req, res) => {
     try {
-        const { url } = req.body;
+        const { url, trackingCode } = req.body;
 
         if (!url) {
             res.status(400).json({ error: 'URL is required' });
             return;
         }
 
-        const result = await analysisService.analyzeUrl(url);
+        const result = await analysisService.analyzeUrl(url, trackingCode);
         res.json(result);
 
     } catch (error: any) {
