@@ -30,6 +30,7 @@ describe('CrawlerService', () => {
             close: vi.fn(),
             setUserAgent: vi.fn(),
             setRequestInterception: vi.fn(),
+            setExtraHTTPHeaders: vi.fn(), // Added mock
         };
 
         mockBrowser = {
