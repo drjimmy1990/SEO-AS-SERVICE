@@ -1,11 +1,25 @@
-// backend/src/api/routes/analysisRoutes.ts
-
 import { Router } from 'express';
-import { startAnalysisController } from '../controllers/analysisController';
+import { AnalysisService } from '../../services/analysis/AnalysisService';
 
 const router = Router();
+const analysisService = new AnalysisService();
 
-// Define the endpoint: POST /api/analysis/run
-router.post('/run', startAnalysisController);
+router.post('/run', async (req, res) => {
+    try {
+        const { url } = req.body;
+
+        if (!url) {
+            res.status(400).json({ error: 'URL is required' });
+            return;
+        }
+
+        const result = await analysisService.analyzeUrl(url);
+        res.json(result);
+
+    } catch (error: any) {
+        console.error('Analysis failed:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
 
 export default router;
