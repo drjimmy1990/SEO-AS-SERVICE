@@ -1,6 +1,6 @@
 // backend/public/injector.js
 (() => {
-    const API_URL = 'https://bumpy-ways-pick.loca.lt/api/settings/live';
+    const API_URL = '{{API_URL}}/api/settings/live';
 
     // CRITICAL FIX: Clean the URL to match how it's stored in the database.
     // 1. Get the full href.

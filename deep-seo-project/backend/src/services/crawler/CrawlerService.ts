@@ -122,9 +122,9 @@ export class CrawlerService {
             await page.setRequestInterception(false); // keep false for now, maybe enable for resource filtering later
 
             // Bypass LocalTunnel reminder page
+            // We set headers on the page to ensure they are sent with the initial request
             await page.setExtraHTTPHeaders({
-                'Bypass-Tunnel-Reminder': 'true',
-                'User-Agent': 'DeepSEO-Crawler/1.0'
+                'bypass-tunnel-reminder': 'true',
             });
 
             const response = await page.goto(url, {

@@ -20,9 +20,12 @@ export class ScriptTagRule implements SEORule {
         const scripts = $('script');
         let found = false;
 
+        console.log(`[ScriptTagRule] Checking ${scripts.length} scripts on ${page.url} for '${this.targetScriptDetail}'`);
+
         scripts.each((i, el) => {
             const src = $(el).attr('src');
             const content = $(el).html();
+            console.log(`[ScriptTagRule] Script ${i}: src="${src}", content length=${content?.length}`);
 
             // Check src
             if (src && src.includes(this.targetScriptDetail)) {
