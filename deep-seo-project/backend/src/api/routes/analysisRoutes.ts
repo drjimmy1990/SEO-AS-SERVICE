@@ -14,7 +14,13 @@ router.post('/run', async (req, res) => {
         }
 
         const result = await analysisService.analyzeUrl(url, trackingCode);
-        res.json(result);
+
+        // Wrap response to match Frontend expectation (response.data.report)
+        res.json({
+            message: 'Analysis completed successfully',
+            report: result,
+            reportId: result.reportId
+        });
 
     } catch (error: any) {
         console.error('Analysis failed:', error);

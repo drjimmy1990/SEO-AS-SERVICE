@@ -9,59 +9,79 @@ export class AnalysisStorageService {
         this.client = supabase;
     }
 
-    public async saveAnalysis(result: AnalysisResult): Promise<string | null> {
+    public async saveAnalysis(result: AnalysisResult): Promise<{ reportId: string, pageId: string } | null> {
         try {
             console.log('Saving analysis results to Supabase...');
 
-            // 1. Create Scan Record
-            const { data: scan, error: scanError } = await this.client
-                .from('scans')
+            // 1. Find or Create Project (based on domain)
+            const urlObj = new URL(result.url);
+            const domain = urlObj.hostname;
+            const homepageUrl = `${urlObj.protocol}//${urlObj.hostname}`;
+
+            let { data: project } = await this.client
+                .from('projects')
+                .select('id')
+                .eq('domain', domain)
+                .single();
+
+            if (!project) {
+                const { data: newProject, error: projError } = await this.client
+                    .from('projects')
+                    .insert({ domain, homepage_url: homepageUrl })
+                    .select('id')
+                    .single();
+
+                if (projError) throw projError;
+                project = newProject;
+            }
+
+            // 2. Find or Create Page
+            let { data: page } = await this.client
+                .from('pages')
+                .select('id')
+                .eq('url', result.url)
+                //.eq('project_id', project.id) // unique constraint is (project_id, url)
+                .single();
+
+            if (!page) {
+                const { data: newPage, error: pageError } = await this.client
+                    .from('pages')
+                    .insert({
+                        project_id: project.id,
+                        url: result.url,
+                        last_analyzed_at: new Date().toISOString()
+                    })
+                    .select('id')
+                    .single();
+
+                if (pageError) throw pageError;
+                page = newPage;
+            } else {
+                // Update last_analyzed_at
+                await this.client
+                    .from('pages')
+                    .update({ last_analyzed_at: new Date().toISOString() })
+                    .eq('id', page.id);
+            }
+
+            // 3. Create Analysis Report
+            const { data: report, error: reportError } = await this.client
+                .from('analysis_reports')
                 .insert({
-                    url: result.url,
-                    score: result.score.total,
-                    meta: result, // Saving FULL result as JSON for AI analysis
-                    status: 'completed',
-                    crawled_pages: result.totalPages,
-                    duration_ms: result.crawlDuration
+                    page_id: page.id,
+                    report_data: result // Saving FULL result as JSON
                 })
                 .select()
                 .single();
 
-            if (scanError) {
-                console.error('Error creating scan record:', scanError);
+            if (reportError) {
+                console.error('Error creating analysis report:', reportError);
                 return null;
             }
 
-            const scanId = scan.id;
-
-            // 2. Save Issues (Rule Results)
-            // Flatten the results to get all issues
-            const issuesToInsert = [];
-            for (const ruleResult of result.results) {
-                for (const issue of ruleResult.issues) {
-                    issuesToInsert.push({
-                        scan_id: scanId,
-                        rule_id: issue.ruleId,
-                        severity: issue.severity,
-                        message: issue.message,
-                        url: issue.url,
-                        element: issue.element
-                    });
-                }
-            }
-
-            if (issuesToInsert.length > 0) {
-                const { error: issuesError } = await this.client
-                    .from('scan_issues')
-                    .insert(issuesToInsert);
-
-                if (issuesError) {
-                    console.error('Error saving scan issues:', issuesError);
-                }
-            }
-
-            console.log(`Analysis saved successfully. Scan ID: ${scanId}`);
-            return scanId;
+            const reportId = report.id;
+            console.log(`Analysis saved successfully. Report ID: ${reportId}`);
+            return { reportId, pageId: page.id };
 
         } catch (error) {
             console.error('Fatal error saving analysis to Supabase:', error);

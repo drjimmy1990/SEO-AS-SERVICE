@@ -10,9 +10,29 @@ export class RuleEngine {
 
     public async analyze(crawlResult: CrawlResult, targetUrl: string, extraRules: SEORule[] = []): Promise<AnalysisResult> {
         const results: RuleResult[] = [];
-        const mainPage = crawlResult.pages.get(targetUrl);
+
+        // Normalize targetUrl to match crawler keys (e.g. remove trailing slash)
+        // Since we don't import normalizeUrl here (circular dep risk if in crawler/utils?), 
+        // let's manually replicate strict normalization or ensure we look for both VARIATIONS.
+        // Better: look for exact match, then normalized match.
+
+        let mainPage = crawlResult.pages.get(targetUrl);
+        if (!mainPage) {
+            // Try removing trailing slash
+            const noSlash = targetUrl.endsWith('/') ? targetUrl.slice(0, -1) : targetUrl;
+            mainPage = crawlResult.pages.get(noSlash);
+
+            // Try adding trailing slash if not present (just in case)
+            if (!mainPage) {
+                const withSlash = targetUrl.endsWith('/') ? targetUrl : targetUrl + '/';
+                mainPage = crawlResult.pages.get(withSlash);
+            }
+        }
 
         if (!mainPage) {
+            // Debugging help
+            const availableKeys = Array.from(crawlResult.pages.keys());
+            console.error(`Main page ${targetUrl} not found. Available keys (Total: ${availableKeys.length}):`, JSON.stringify(availableKeys, null, 2));
             throw new Error(`Main page ${targetUrl} not found in crawl results.`);
         }
 

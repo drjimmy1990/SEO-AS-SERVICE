@@ -75,11 +75,12 @@ export class AnalysisService {
 
         // 3. Save to Supabase (Non-blocking usually, but await for MVP debugging)
         // 3. Save to Supabase
-        const reportId = await this.storageService.saveAnalysis(analysisResult);
+        const savedIds = await this.storageService.saveAnalysis(analysisResult);
 
         return {
             ...analysisResult,
-            reportId: reportId || undefined
+            reportId: savedIds?.reportId,
+            pageId: savedIds?.pageId
         };
     }
 }

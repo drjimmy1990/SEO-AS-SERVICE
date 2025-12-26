@@ -15,21 +15,21 @@ export const getAiSuggestionsController = async (req: Request, res: Response) =>
     }
 
     try {
-        // 1. Fetch the analysis report data from 'scans' table (stored in 'meta')
-        const { data: scan, error: scanError } = await supabase
-            .from('scans')
-            .select('meta')
+        // 1. Fetch the analysis report data from 'analysis_reports' table
+        const { data: report, error: reportError } = await supabase
+            .from('analysis_reports')
+            .select('report_data')
             .eq('id', report_id)
             .single();
 
-        if (scanError || !scan) {
-            return res.status(404).json({ error: `Analysis scan with ID ${report_id} not found.` });
+        if (reportError || !report) {
+            return res.status(404).json({ error: `Analysis report with ID ${report_id} not found.` });
         }
 
-        // 2. Call the n8n webhook with the ENTIRE report_data (which is in scan.meta)
+        // 2. Call the n8n webhook with the ENTIRE report_data
         console.log('Sending full analysis report to n8n for AI suggestions...');
         const aiResponse = await axios.post(n8nWebhookUrl, {
-            report_data: scan.meta
+            report_data: report.report_data // Using report.report_data
         });
 
         // 3. Return the AI's response directly to the frontend

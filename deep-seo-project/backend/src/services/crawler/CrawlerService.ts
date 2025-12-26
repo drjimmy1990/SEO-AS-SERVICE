@@ -53,6 +53,12 @@ export class CrawlerService {
         }
 
         const endTime = new Date();
+
+        // Debug: Log if empty
+        if (this.results.size === 0) {
+            console.warn("Crawler finished with 0 pages found. Visited:", Array.from(this.visitedUrls));
+        }
+
         return {
             pages: this.results,
             visitedUrls: this.visitedUrls,

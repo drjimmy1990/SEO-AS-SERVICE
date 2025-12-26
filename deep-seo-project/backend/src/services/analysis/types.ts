@@ -46,4 +46,5 @@ export interface AnalysisResult {
     results: RuleResult[];
     timestamp: Date;
     reportId?: string;
+    pageId?: string;
 }

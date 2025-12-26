@@ -1,25 +1,45 @@
 import React, { useState } from 'react';
-import { getAiSuggestions } from '../services/api';
+import { getAiSuggestions, saveLiveSettings } from '../services/api';
 
-const AiRecommendations = ({ reportId }) => {
+const AiRecommendations = ({ reportId, pageId }) => {
     const [suggestions, setSuggestions] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     const handleGetSuggestions = async () => {
-        if (!reportId) return;
         setLoading(true);
         setError(null);
         try {
             const response = await getAiSuggestions(reportId);
-            // The response.data should be the JSON object returned by n8n
-            console.log("AI Response:", response.data);
-            setSuggestions(response.data);
+            setSuggestions(response.data.suggestions);
         } catch (err) {
-            console.error(err);
-            setError('Failed to get AI suggestions.');
+            console.error('AI Error:', err);
+            setError('Failed to get suggestions. ' + (err.response?.data?.error || err.message));
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleApplyFix = async (type, content, selector = null) => {
+        if (!pageId) {
+            alert("Error: Page ID not found. Cannot save settings.");
+            return;
+        }
+
+        const settings = {};
+        if (type === 'title') settings.title = content;
+        if (type === 'description') settings.description = content;
+        if (type === 'h1') settings.h1 = content; // Assuming backend handles this (injector might not support H1 yet, but let's send it)
+        // For Image Alt, we need a selector map? 
+        // The simple injector.js might only support title/desc for now.
+        // Let's stick to Title/Desc for this iteration.
+
+        try {
+            await saveLiveSettings(pageId, settings);
+            alert(`Success! ${type} updated. The Injector script will now serve this content.`);
+        } catch (err) {
+            console.error(err);
+            alert("Failed to save settings.");
         }
     };
 
@@ -46,9 +66,17 @@ const AiRecommendations = ({ reportId }) => {
                     {suggestions.title_suggestions && (
                         <div style={{ marginBottom: '15px' }}>
                             <strong>Suggested Titles:</strong>
-                            <ul>
+                            <ul style={{ listStyle: 'none', padding: 0 }}>
                                 {suggestions.title_suggestions.map((title, idx) => (
-                                    <li key={idx}>{title}</li>
+                                    <li key={idx} style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <span>{title}</span>
+                                        <button
+                                            onClick={() => handleApplyFix('title', title)}
+                                            style={{ padding: '2px 8px', fontSize: '12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                        >
+                                            Apply
+                                        </button>
+                                    </li>
                                 ))}
                             </ul>
                         </div>
@@ -57,9 +85,17 @@ const AiRecommendations = ({ reportId }) => {
                     {suggestions.description_suggestions && (
                         <div style={{ marginBottom: '15px' }}>
                             <strong>Suggested Descriptions:</strong>
-                            <ul>
+                            <ul style={{ listStyle: 'none', padding: 0 }}>
                                 {suggestions.description_suggestions.map((desc, idx) => (
-                                    <li key={idx}>{desc}</li>
+                                    <li key={idx} style={{ marginBottom: '5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <span>{desc}</span>
+                                        <button
+                                            onClick={() => handleApplyFix('description', desc)}
+                                            style={{ padding: '2px 8px', fontSize: '12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                        >
+                                            Apply
+                                        </button>
+                                    </li>
                                 ))}
                             </ul>
                         </div>
@@ -69,19 +105,6 @@ const AiRecommendations = ({ reportId }) => {
                         <div style={{ marginBottom: '15px' }}>
                             <strong>H1 Recommendation:</strong>
                             <p>{suggestions.h1_recommendations}</p>
-                        </div>
-                    )}
-
-                    {suggestions.image_alt_recommendations && suggestions.image_alt_recommendations.length > 0 && (
-                        <div>
-                            <strong>Image Alt Text Suggestions:</strong>
-                            <ul>
-                                {suggestions.image_alt_recommendations.map((img, idx) => (
-                                    <li key={idx}>
-                                        <code>{img.selector}</code>: {img.suggested_alt}
-                                    </li>
-                                ))}
-                            </ul>
                         </div>
                     )}
                 </div>
