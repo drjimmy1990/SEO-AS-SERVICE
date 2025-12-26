@@ -45,4 +45,5 @@ export interface AnalysisResult {
     score: SEOScore;
     results: RuleResult[];
     timestamp: Date;
+    reportId?: string;
 }

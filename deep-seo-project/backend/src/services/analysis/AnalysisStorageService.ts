@@ -19,7 +19,7 @@ export class AnalysisStorageService {
                 .insert({
                     url: result.url,
                     score: result.score.total,
-                    meta: result.score, // Storing full score breakdown as JSON
+                    meta: result, // Saving FULL result as JSON for AI analysis
                     status: 'completed',
                     crawled_pages: result.totalPages,
                     duration_ms: result.crawlDuration

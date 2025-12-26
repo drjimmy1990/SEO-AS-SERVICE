@@ -23,12 +23,13 @@ export const startNewCrawl = (homepage_url) => {
 
 
 /**
- * Triggers the analysis for a specific page.
- * @param {string} page_id The UUID of the page to analyze.
+ * Triggers the analysis for a specific URL.
+ * @param {string} url The URL to analyze.
+ * @param {string} [trackingCode] Optional tracking code to verify.
  * @returns {Promise<object>} The response containing the new analysis report.
  */
-export const startPageAnalysis = (page_id) => {
-    return apiClient.post('/analysis/run', { page_id });
+export const startPageAnalysis = (url, trackingCode) => {
+    return apiClient.post('/analysis/run', { url, trackingCode });
 };
 
 // Add this function to api.js

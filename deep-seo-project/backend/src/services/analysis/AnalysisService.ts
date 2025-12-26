@@ -74,8 +74,12 @@ export class AnalysisService {
         const analysisResult = await this.ruleEngine.analyze(crawlResult, url, transientRules);
 
         // 3. Save to Supabase (Non-blocking usually, but await for MVP debugging)
-        await this.storageService.saveAnalysis(analysisResult);
+        // 3. Save to Supabase
+        const reportId = await this.storageService.saveAnalysis(analysisResult);
 
-        return analysisResult;
+        return {
+            ...analysisResult,
+            reportId: reportId || undefined
+        };
     }
 }

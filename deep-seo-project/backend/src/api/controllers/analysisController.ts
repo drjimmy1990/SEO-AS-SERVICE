@@ -1,8 +1,8 @@
-// backend/src/api/controllers/analysisController.ts
-
 import { Request, Response } from 'express';
 import supabase from '../../services/supabase';
-import { analyzePage } from '../../services/analysis';
+import { AnalysisService } from '../../services/analysis/AnalysisService';
+
+const analysisService = new AnalysisService();
 
 export const startAnalysisController = async (req: Request, res: Response) => {
     const { page_id } = req.body;
@@ -23,33 +23,23 @@ export const startAnalysisController = async (req: Request, res: Response) => {
             return res.status(404).json({ error: `Page with ID ${page_id} not found.` });
         }
 
-        // --- Step 2: Run the deep analysis on the URL ---
-        const reportData = await analyzePage(page.url);
+        // --- Step 2: Run the deep analysis using the Service ---
+        const result = await analysisService.analyzeUrl(page.url);
 
-        // --- Step 3: Save the new analysis report to the database ---
-        const { data: newReport, error: reportError } = await supabase
-            .from('analysis_reports')
-            .insert({
-                page_id: page_id,
-                report_data: reportData // The entire JSON object is saved here
-            })
-            .select()
-            .single();
+        // Note: analysisService.analyzeUrl already saves to the DB (scans table).
+        // If we want to maintain the old behavior of returning a "report" object structure
+        // we can adaptation here, or return the result directly.
 
-        if (reportError) {
-            throw reportError;
-        }
-
-        // --- Step 4 (Optional but good practice): Update the page's last_analyzed_at timestamp ---
+        // We might want to update the 'pages' table last_analyzed_at here as well.
         await supabase
             .from('pages')
             .update({ last_analyzed_at: new Date().toISOString() })
             .eq('id', page_id);
 
-        // --- Step 5: Respond to the client ---
-        res.status(201).json({
+        res.status(200).json({
             message: `Successfully analyzed page ${page_id}`,
-            report: newReport,
+            report: result,
+            reportId: result.reportId
         });
 
     } catch (error: any) {
