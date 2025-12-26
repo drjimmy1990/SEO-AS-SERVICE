@@ -33,6 +33,7 @@ export const getAiSuggestionsController = async (req: Request, res: Response) =>
         });
 
         // 3. Return the AI's response directly to the frontend
+        console.log('Received AI response from n8n:', JSON.stringify(aiResponse.data, null, 2));
         res.status(200).json(aiResponse.data);
 
     } catch (error: any) {

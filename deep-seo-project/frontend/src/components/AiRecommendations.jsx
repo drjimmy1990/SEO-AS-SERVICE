@@ -11,7 +11,8 @@ const AiRecommendations = ({ reportId, pageId }) => {
         setError(null);
         try {
             const response = await getAiSuggestions(reportId);
-            setSuggestions(response.data.suggestions);
+            // The n8n webhook returns the suggestions object directly (e.g. { title_suggestions: [...] })
+            setSuggestions(response.data);
         } catch (err) {
             console.error('AI Error:', err);
             setError('Failed to get suggestions. ' + (err.response?.data?.error || err.message));
@@ -20,7 +21,9 @@ const AiRecommendations = ({ reportId, pageId }) => {
         }
     };
 
-    const handleApplyFix = async (type, content, selector = null) => {
+    const [applied, setApplied] = useState({});
+
+    const handleApplyFix = async (type, content, idx) => {
         if (!pageId) {
             alert("Error: Page ID not found. Cannot save settings.");
             return;
@@ -29,14 +32,13 @@ const AiRecommendations = ({ reportId, pageId }) => {
         const settings = {};
         if (type === 'title') settings.title = content;
         if (type === 'description') settings.description = content;
-        if (type === 'h1') settings.h1 = content; // Assuming backend handles this (injector might not support H1 yet, but let's send it)
-        // For Image Alt, we need a selector map? 
-        // The simple injector.js might only support title/desc for now.
-        // Let's stick to Title/Desc for this iteration.
+        if (type === 'h1') settings.h1 = content;
 
         try {
             await saveLiveSettings(pageId, settings);
-            alert(`Success! ${type} updated. The Injector script will now serve this content.`);
+            setApplied({ ...applied, [`${type}-${idx}`]: true });
+            // Optional: alert removed to be less intrusive, or kept as secondary confirmation
+            // alert(`Success! ${type} updated.`); 
         } catch (err) {
             console.error(err);
             alert("Failed to save settings.");
